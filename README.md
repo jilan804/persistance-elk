@@ -169,3 +169,66 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: filebeat
+
+============================================================
+application ingress:-
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: app-config
+  namespace: logs
+  labels:
+    k8s-app: app
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    matchLabels:
+      k8s-app: app
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        k8s-app: app
+        kubernetes.io/cluster-service: "true"
+    spec:
+      containers:
+      - name: nginx-app
+        image: 292090429255.dkr.ecr.ap-south-1.amazonaws.com/a.ysquaretechnology.com:latest
+        ports:
+        - containerPort: 80
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-service
+  namespace: logs
+spec:
+  selector:
+    k8s-app: app
+    kubernetes.io/cluster-service: "true"
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: logs
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: b.example.com
+    http:
+      paths:
+        - path:
+          backend:
+            serviceName: nginx-service
+            servicePort: 80
+
+
